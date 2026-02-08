@@ -1,4 +1,4 @@
-import { Settings, RotateCcw } from 'lucide-react';
+import { RotateCcw, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -16,43 +16,58 @@ interface HeaderProps {
   totalBudget: number;
   totalSpent: number;
   onReset: () => void;
+  onLogout: () => void;
 }
 
-export const Header = ({ totalBudget, totalSpent, onReset }: HeaderProps) => {
+export const Header = ({ totalBudget, totalSpent, onReset, onLogout }: HeaderProps) => {
   const remaining = totalBudget - totalSpent;
   const percentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   return (
     <header className="bg-primary text-primary-foreground px-4 py-6 rounded-b-3xl shadow-elevated">
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h1 className="font-display text-xl font-bold">BucketPay</h1>
-          <p className="text-primary-foreground/70 text-sm">Track your spending</p>
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">💰</span>
+          <div>
+            <h1 className="font-display text-xl font-bold">Budget Buddy</h1>
+            <p className="text-primary-foreground/70 text-xs">Track your spending</p>
+          </div>
         </div>
         
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-primary-foreground hover:bg-primary-foreground/10"
-            >
-              <RotateCcw className="w-5 h-5" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent className="mx-4 rounded-xl">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="font-display">Reset Month?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will reset all spending to zero and clear transaction history. Budgets will remain unchanged.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={onReset}>Reset</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <div className="flex items-center gap-1">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-primary-foreground hover:bg-primary-foreground/10 h-9 w-9"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="mx-4 rounded-xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="font-display">Reset Month?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will reset all spending to zero and clear transaction history. Budgets will remain unchanged.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onReset}>Reset</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onLogout}
+            className="text-primary-foreground hover:bg-primary-foreground/10 h-9 w-9"
+          >
+            <LogOut className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="bg-primary-foreground/10 rounded-2xl p-4">

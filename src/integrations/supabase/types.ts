@@ -14,7 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_bonuses: {
+        Row: {
+          bonus_amount: number
+          claimed_date: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          bonus_amount?: number
+          claimed_date?: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          bonus_amount?: number
+          claimed_date?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          is_first_time: boolean
+          phone_number: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_first_time?: boolean
+          phone_number?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_first_time?: boolean
+          phone_number?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          bucket_type: string
+          created_at: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bucket_type: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bucket_type?: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_budgets: {
+        Row: {
+          bucket_type: string
+          budget: number
+          created_at: string
+          id: string
+          spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bucket_type: string
+          budget?: number
+          created_at?: string
+          id?: string
+          spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bucket_type?: string
+          budget?: number
+          created_at?: string
+          id?: string
+          spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
