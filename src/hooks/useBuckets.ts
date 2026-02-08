@@ -1,44 +1,67 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bucket, BucketType, BUCKET_CONFIG, Transaction } from '@/types/bucket';
+import { supabase } from '@/integrations/supabase/client';
 
-const STORAGE_KEY = 'bucket-spending-data';
-const TRANSACTIONS_KEY = 'bucket-transactions';
+export const useBuckets = (userId: string) => {
+  const [buckets, setBuckets] = useState<Bucket[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const getInitialBuckets = (): Bucket[] => {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    return JSON.parse(saved);
-  }
-  return Object.entries(BUCKET_CONFIG).map(([id, config]) => ({
-    id: id as BucketType,
-    name: config.name,
-    icon: config.icon,
-    budget: 0,
-    spent: 0,
-  }));
-};
+  const fetchData = useCallback(async () => {
+    if (!userId) return;
 
-const getInitialTransactions = (): Transaction[] => {
-  const saved = localStorage.getItem(TRANSACTIONS_KEY);
-  if (saved) {
-    return JSON.parse(saved);
-  }
-  return [];
-};
+    // Fetch budgets
+    const { data: budgetData } = await (supabase as any)
+      .from('user_budgets')
+      .select('*')
+      .eq('user_id', userId);
 
-export const useBuckets = () => {
-  const [buckets, setBuckets] = useState<Bucket[]>(getInitialBuckets);
-  const [transactions, setTransactions] = useState<Transaction[]>(getInitialTransactions);
+    const bucketList = Object.entries(BUCKET_CONFIG).map(([id, config]) => {
+      const dbBucket = budgetData?.find((b: any) => b.bucket_type === id);
+      return {
+        id: id as BucketType,
+        name: config.name,
+        icon: config.icon,
+        budget: Number(dbBucket?.budget) || 0,
+        spent: Number(dbBucket?.spent) || 0,
+      };
+    });
+    setBuckets(bucketList);
+
+    // Fetch transactions
+    const { data: txData } = await (supabase as any)
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    setTransactions(
+      txData?.map((t: any) => ({
+        id: t.id,
+        bucketId: t.bucket_type as BucketType,
+        amount: Number(t.amount),
+        date: t.created_at,
+        status: t.status as 'success' | 'failed' | 'pending',
+      })) || []
+    );
+
+    setLoading(false);
+  }, [userId]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(buckets));
-  }, [buckets]);
+    fetchData();
+  }, [fetchData]);
 
-  useEffect(() => {
-    localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(transactions));
-  }, [transactions]);
+  const updateBudget = async (bucketId: BucketType, budget: number) => {
+    // Upsert the budget
+    await (supabase as any)
+      .from('user_budgets')
+      .upsert(
+        { user_id: userId, bucket_type: bucketId, budget },
+        { onConflict: 'user_id,bucket_type' }
+      );
 
-  const updateBudget = (bucketId: BucketType, budget: number) => {
     setBuckets(prev =>
       prev.map(b => (b.id === bucketId ? { ...b, budget } : b))
     );
@@ -54,29 +77,60 @@ export const useBuckets = () => {
     return getBalance(bucketId) >= amount;
   };
 
-  const recordPayment = (bucketId: BucketType, amount: number, status: 'success' | 'failed') => {
-    const transaction: Transaction = {
-      id: Date.now().toString(),
-      bucketId,
-      amount,
-      date: new Date().toISOString(),
-      status,
-    };
-    
-    setTransactions(prev => [transaction, ...prev]);
+  const recordPayment = async (bucketId: BucketType, amount: number, status: 'success' | 'failed') => {
+    // Insert transaction
+    await (supabase as any)
+      .from('transactions')
+      .insert({
+        user_id: userId,
+        bucket_type: bucketId,
+        amount,
+        status,
+      });
 
+    // Update spent amount if success
     if (status === 'success') {
+      const bucket = buckets.find(b => b.id === bucketId);
+      const newSpent = (bucket?.spent || 0) + amount;
+      await (supabase as any)
+        .from('user_budgets')
+        .update({ spent: newSpent })
+        .eq('user_id', userId)
+        .eq('bucket_type', bucketId);
+
       setBuckets(prev =>
-        prev.map(b => (b.id === bucketId ? { ...b, spent: b.spent + amount } : b))
+        prev.map(b => (b.id === bucketId ? { ...b, spent: newSpent } : b))
       );
     }
+
+    // Refresh transactions
+    fetchData();
   };
 
-  const resetMonth = () => {
-    setBuckets(prev =>
-      prev.map(b => ({ ...b, spent: 0 }))
-    );
+  const resetMonth = async () => {
+    // Reset all spent to 0
+    await (supabase as any)
+      .from('user_budgets')
+      .update({ spent: 0 })
+      .eq('user_id', userId);
+
+    setBuckets(prev => prev.map(b => ({ ...b, spent: 0 })));
     setTransactions([]);
+  };
+
+  const initializeBudgets = async (budgets: Record<BucketType, number>) => {
+    const rows = Object.entries(budgets).map(([type, budget]) => ({
+      user_id: userId,
+      bucket_type: type,
+      budget,
+      spent: 0,
+    }));
+
+    await (supabase as any)
+      .from('user_budgets')
+      .upsert(rows, { onConflict: 'user_id,bucket_type' });
+
+    await fetchData();
   };
 
   const totalBudget = buckets.reduce((sum, b) => sum + b.budget, 0);
@@ -85,11 +139,13 @@ export const useBuckets = () => {
   return {
     buckets,
     transactions,
+    loading,
     updateBudget,
     getBalance,
     canAfford,
     recordPayment,
     resetMonth,
+    initializeBudgets,
     totalBudget,
     totalSpent,
   };
