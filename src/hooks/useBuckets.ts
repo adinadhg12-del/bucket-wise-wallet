@@ -103,8 +103,23 @@ export const useBuckets = (userId: string) => {
       );
     }
 
-    // Refresh transactions
-    fetchData();
+    // Refresh only transactions list (not buckets, to avoid race condition resetting spent)
+    const { data: txData } = await (supabase as any)
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    setTransactions(
+      txData?.map((t: any) => ({
+        id: t.id,
+        bucketId: t.bucket_type as BucketType,
+        amount: Number(t.amount),
+        date: t.created_at,
+        status: t.status as 'success' | 'failed' | 'pending',
+      })) || []
+    );
   };
 
   const resetMonth = async () => {
