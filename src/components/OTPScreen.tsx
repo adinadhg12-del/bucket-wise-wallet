@@ -18,14 +18,12 @@ export const OTPScreen = ({ identifier, type, onVerify, onBack }: OTPScreenProps
   const [resendTimer, setResendTimer] = useState(30);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Resend timer
   useEffect(() => {
     if (resendTimer <= 0) return;
     const interval = setInterval(() => setResendTimer(prev => prev - 1), 1000);
     return () => clearInterval(interval);
   }, [resendTimer]);
 
-  // Auto-verify when 6 digits entered
   useEffect(() => {
     const code = otp.join('');
     if (code.length === 6 && !loading) {
@@ -47,7 +45,6 @@ export const OTPScreen = ({ identifier, type, onVerify, onBack }: OTPScreenProps
 
   const handleChange = (index: number, value: string) => {
     if (value.length > 1) {
-      // Handle paste
       const digits = value.replace(/[^0-9]/g, '').split('').slice(0, 6);
       const newOtp = [...otp];
       digits.forEach((d, i) => {
@@ -93,43 +90,46 @@ export const OTPScreen = ({ identifier, type, onVerify, onBack }: OTPScreenProps
     : `${identifier.slice(0, 3)}***@${identifier.split('@')[1]}`;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: 'hsl(200 25% 8%)' }}>
       {/* Header */}
       <motion.div
         className="flex items-center gap-3 px-4 pt-6"
-        initial={{ opacity: 0, x: -20 }}
+        initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.4 }}
       >
-        <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          className="rounded-full text-white/60 hover:text-white hover:bg-white/5"
+        >
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <h2 className="font-display font-semibold text-foreground">Verify OTP</h2>
       </motion.div>
 
       <motion.div
-        className="flex-1 px-6 pt-8 flex flex-col"
-        initial={{ opacity: 0, y: 30 }}
+        className="flex-1 px-8 pt-12 flex flex-col"
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
       >
-        {/* Info */}
-        <div className="text-center mb-8">
-          <motion.div
-            className="w-20 h-20 mx-auto bg-primary/10 rounded-2xl flex items-center justify-center text-4xl mb-4"
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
+        {/* Title section */}
+        <div className="mb-10">
+          <h2
+            className="text-[28px] font-bold text-white leading-tight"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
-            🔐
-          </motion.div>
-          <h3 className="text-lg font-display font-semibold text-foreground">Enter verification code</h3>
-          <p className="text-sm text-muted-foreground mt-2">
-            We sent a 6-digit code to<br />
-            <span className="font-medium text-foreground">{maskedIdentifier}</span>
+            Verify your {type === 'phone' ? 'number' : 'email'}
+          </h2>
+          <p className="text-sm mt-3" style={{ color: 'hsl(200 15% 50%)' }}>
+            Enter the 6-digit code sent to{' '}
+            <span className="text-white/80">{maskedIdentifier}</span>
           </p>
         </div>
 
         {/* OTP Input */}
-        <div className="flex justify-center gap-2.5 mb-4" onPaste={handlePaste}>
+        <div className="flex justify-between gap-2 mb-4" onPaste={handlePaste}>
           {otp.map((digit, index) => (
             <motion.input
               key={index}
@@ -141,15 +141,19 @@ export const OTPScreen = ({ identifier, type, onVerify, onBack }: OTPScreenProps
               onChange={e => handleChange(index, e.target.value)}
               onKeyDown={e => handleKeyDown(index, e)}
               className={cn(
-                "w-12 h-14 text-center text-xl font-display font-bold rounded-xl border-2 bg-card transition-all outline-none",
+                "w-full aspect-square max-w-[52px] text-center text-xl font-bold rounded-xl border-2 transition-all outline-none text-white",
                 digit
-                  ? "border-primary text-foreground"
-                  : "border-border text-foreground",
-                "focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  ? "border-primary"
+                  : "border-white/10",
+                "focus:border-primary focus:ring-1 focus:ring-primary/30"
               )}
-              initial={{ scale: 0.8, opacity: 0 }}
+              style={{
+                background: 'hsl(200 20% 12%)',
+                fontFamily: "'Space Grotesk', sans-serif",
+              }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * 0.04 }}
               autoFocus={index === 0}
             />
           ))}
@@ -158,7 +162,7 @@ export const OTPScreen = ({ identifier, type, onVerify, onBack }: OTPScreenProps
         {/* Error */}
         {error && (
           <motion.p
-            className="text-center text-sm text-destructive mb-4"
+            className="text-xs text-destructive mb-3"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
@@ -168,45 +172,44 @@ export const OTPScreen = ({ identifier, type, onVerify, onBack }: OTPScreenProps
 
         {/* Loading */}
         {loading && (
-          <div className="flex justify-center py-4">
-            <Loader2 className="w-6 h-6 text-primary animate-spin" />
+          <div className="flex justify-center py-6">
+            <Loader2 className="w-5 h-5 text-primary animate-spin" />
           </div>
         )}
 
-        {/* Resend / Change */}
-        <div className="text-center space-y-3 mt-4">
+        {/* Resend */}
+        <div className="mt-6 space-y-2">
           {resendTimer > 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Resend code in <span className="font-medium text-foreground">{resendTimer}s</span>
+            <p className="text-sm" style={{ color: 'hsl(200 15% 45%)' }}>
+              Resend in <span className="text-white/70">{resendTimer}s</span>
             </p>
           ) : (
-            <Button
-              variant="ghost"
-              className="text-primary font-medium"
+            <button
+              className="text-sm font-medium text-primary"
               onClick={() => setResendTimer(30)}
             >
-              Resend OTP
-            </Button>
+              Resend code
+            </button>
           )}
-
-          <Button
-            variant="link"
-            className="text-muted-foreground text-sm"
+          <button
+            className="block text-xs"
+            style={{ color: 'hsl(200 15% 40%)' }}
             onClick={onBack}
           >
-            Change {type === 'phone' ? 'phone number' : 'email'}
-          </Button>
+            Change {type === 'phone' ? 'number' : 'email'}
+          </button>
         </div>
 
-        {/* Hint for prototype */}
+        {/* Dev hint */}
         <motion.div
-          className="mt-auto mb-8 bg-accent/10 rounded-xl p-3 text-center"
+          className="mt-auto mb-8 rounded-xl px-4 py-3"
+          style={{ background: 'hsl(162 63% 41% / 0.08)' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
         >
-          <p className="text-xs text-accent font-medium">
-            🧪 Prototype mode: Enter any 6 digits to verify
+          <p className="text-xs font-medium" style={{ color: 'hsl(162 63% 55%)' }}>
+            Prototype — enter any 6 digits
           </p>
         </motion.div>
       </motion.div>
