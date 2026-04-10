@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Gift, Sparkles } from 'lucide-react';
 
 interface DailyBonusScreenProps {
   userId: string;
@@ -10,8 +9,6 @@ interface DailyBonusScreenProps {
 }
 
 const BONUS_AMOUNT = 10;
-
-const COIN_EMOJIS = ['🪙', '💰', '✨', '🪙', '💰', '✨', '🪙', '💰'];
 
 export const DailyBonusScreen = ({ userId, onContinue }: DailyBonusScreenProps) => {
   const [checking, setChecking] = useState(true);
@@ -33,7 +30,6 @@ export const DailyBonusScreen = ({ userId, onContinue }: DailyBonusScreenProps) 
 
     if (data) {
       setAlreadyClaimed(true);
-      // Skip this screen after a brief moment
       setTimeout(onContinue, 300);
     }
     setChecking(false);
@@ -46,128 +42,157 @@ export const DailyBonusScreen = ({ userId, onContinue }: DailyBonusScreenProps) 
       .insert({ user_id: userId, claimed_date: today, bonus_amount: BONUS_AMOUNT });
 
     setClaimed(true);
-    setTimeout(onContinue, 2000);
+    setTimeout(onContinue, 2200);
   };
 
   if (checking || alreadyClaimed) return null;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
-      {/* Background celebration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {COIN_EMOJIS.map((emoji, i) => (
-          <motion.div
-            key={i}
-            className="absolute text-2xl"
-            style={{
-              left: `${10 + (i * 12)}%`,
-              top: '-10%',
-            }}
-            animate={{
-              y: ['0vh', '110vh'],
-              rotate: [0, 360],
-              opacity: [0, 1, 1, 0],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              delay: i * 0.3,
-              repeat: Infinity,
-              ease: 'easeIn',
-            }}
-          >
-            {emoji}
-          </motion.div>
-        ))}
-      </div>
-
+    <motion.div
+      className="min-h-screen bg-foreground flex flex-col items-center justify-center px-6 relative overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      {/* Subtle gradient orb */}
       <motion.div
-        className="relative z-10 text-center max-w-sm"
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, ease: 'backOut' }}
-      >
+        className="absolute w-[500px] h-[500px] rounded-full"
+        style={{
+          background: 'radial-gradient(circle, hsl(162 63% 41% / 0.12) 0%, transparent 70%)',
+        }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1.2, opacity: 1 }}
+        transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+      />
+
+      <AnimatePresence mode="wait">
         {!claimed ? (
-          <>
-            {/* Gift icon */}
+          <motion.div
+            key="claim"
+            className="relative z-10 text-center max-w-xs"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {/* Icon */}
             <motion.div
-              className="w-28 h-28 mx-auto bg-accent/15 rounded-3xl flex items-center justify-center mb-6"
-              animate={{
-                rotate: [0, -10, 10, -5, 5, 0],
-                scale: [1, 1.05, 1],
+              className="w-20 h-20 mx-auto rounded-[22px] flex items-center justify-center mb-8"
+              style={{
+                background: 'linear-gradient(135deg, hsl(162 63% 41%), hsl(162 63% 50%))',
+                boxShadow: '0 20px 60px -15px hsl(162 63% 41% / 0.5)',
               }}
-              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
+              initial={{ scale: 0, rotate: -20 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
             >
-              <Gift className="w-14 h-14 text-accent" />
+              <span className="text-3xl">🎁</span>
             </motion.div>
 
             <motion.h1
-              className="text-2xl font-display font-bold text-foreground mb-2"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              className="text-2xl font-bold text-white mb-2"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.5 }}
             >
-              🎁 Daily Bonus Unlocked!
+              Daily Bonus
             </motion.h1>
 
             <motion.p
-              className="text-muted-foreground mb-8"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
+              className="text-sm mb-10"
+              style={{ color: 'hsl(200 15% 55%)' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.35 }}
             >
-              Come back every day to earn more rewards
+              Come back every day to earn rewards
             </motion.p>
 
+            {/* Amount card */}
             <motion.div
-              className="bg-card rounded-2xl shadow-card p-6 mb-6"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
+              className="rounded-2xl p-6 mb-8"
+              style={{
+                background: 'hsl(200 15% 12%)',
+                border: '1px solid hsl(200 15% 18%)',
+              }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
             >
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Sparkles className="w-5 h-5 text-accent" />
-                <span className="text-sm font-medium text-muted-foreground">Today's Bonus</span>
-                <Sparkles className="w-5 h-5 text-accent" />
-              </div>
-              <p className="text-4xl font-display font-bold text-primary">
+              <p
+                className="text-xs tracking-widest uppercase mb-3"
+                style={{ color: 'hsl(162 63% 41%)' }}
+              >
+                Today's Reward
+              </p>
+              <p
+                className="text-4xl font-bold text-white"
+                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              >
                 ₹{BONUS_AMOUNT}
               </p>
             </motion.div>
 
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
               <Button
                 onClick={claimBonus}
-                className="w-full h-14 text-lg font-semibold rounded-xl gap-2"
+                className="w-full h-14 text-base font-semibold rounded-xl"
+                style={{
+                  background: 'linear-gradient(135deg, hsl(162 63% 41%), hsl(162 63% 50%))',
+                  color: 'white',
+                  boxShadow: '0 8px 32px -8px hsl(162 63% 41% / 0.5)',
+                }}
                 size="lg"
               >
-                <Gift className="w-5 h-5" />
                 Claim Bonus
               </Button>
             </motion.div>
-          </>
+          </motion.div>
         ) : (
           <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, ease: 'backOut' }}
-            className="text-center"
+            key="claimed"
+            className="relative z-10 text-center"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
             <motion.div
-              className="text-7xl mb-4"
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 0.8 }}
+              className="w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6"
+              style={{
+                background: 'hsl(162 63% 41% / 0.15)',
+              }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.4, ease: 'backOut' }}
             >
-              🎉
+              <motion.span
+                className="text-4xl"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.3, ease: 'backOut' }}
+              >
+                ✓
+              </motion.span>
             </motion.div>
-            <h2 className="text-2xl font-display font-bold text-primary mb-2">Bonus Claimed!</h2>
-            <p className="text-muted-foreground">₹{BONUS_AMOUNT} added to your rewards</p>
+
+            <h2
+              className="text-2xl font-bold text-white mb-2"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              Bonus Claimed
+            </h2>
+            <p style={{ color: 'hsl(200 15% 55%)' }}>
+              ₹{BONUS_AMOUNT} added to your rewards
+            </p>
           </motion.div>
         )}
-      </motion.div>
-    </div>
+      </AnimatePresence>
+    </motion.div>
   );
 };
