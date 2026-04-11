@@ -44,6 +44,12 @@ const Index = () => {
     totalSpent,
   } = useBuckets(user?.id || '');
 
+  const {
+    purchasedVouchers,
+    purchaseVoucher,
+    refetch: refetchVouchers,
+  } = useVouchers(user?.id || '');
+
   const [selectedBucket, setSelectedBucket] = useState<Bucket | null>(null);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
