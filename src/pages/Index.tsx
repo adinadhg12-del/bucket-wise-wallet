@@ -18,7 +18,9 @@ import { BudgetSetupModal } from '@/components/BudgetSetupModal';
 import { TransactionList } from '@/components/TransactionList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Wallet, History, Settings2 } from 'lucide-react';
+import { Wallet, History, Settings2, Ticket } from 'lucide-react';
+import { VoucherTab } from '@/components/VoucherTab';
+import { useVouchers } from '@/hooks/useVouchers';
 
 type AppPhase = 'splash' | 'auth' | 'otp' | 'daily-bonus' | 'onboarding' | 'home';
 
@@ -41,6 +43,12 @@ const Index = () => {
     totalBudget,
     totalSpent,
   } = useBuckets(user?.id || '');
+
+  const {
+    purchasedVouchers,
+    purchaseVoucher,
+    refetch: refetchVouchers,
+  } = useVouchers(user?.id || '');
 
   const [selectedBucket, setSelectedBucket] = useState<Bucket | null>(null);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -178,10 +186,14 @@ const Index = () => {
 
           <main className="px-4 -mt-4">
             <Tabs defaultValue="buckets" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4 h-12 bg-card shadow-soft">
+              <TabsList className="grid w-full grid-cols-3 mb-4 h-12 bg-card shadow-soft">
                 <TabsTrigger value="buckets" className="gap-2 font-medium">
                   <Wallet className="w-4 h-4" />
                   Buckets
+                </TabsTrigger>
+                <TabsTrigger value="vouchers" className="gap-2 font-medium">
+                  <Ticket className="w-4 h-4" />
+                  Vouchers
                 </TabsTrigger>
                 <TabsTrigger value="history" className="gap-2 font-medium">
                   <History className="w-4 h-4" />
@@ -217,6 +229,15 @@ const Index = () => {
                     </p>
                   </div>
                 )}
+              </TabsContent>
+
+              <TabsContent value="vouchers" className="mt-0">
+                <VoucherTab
+                  totalBalance={totalBudget - totalSpent}
+                  purchasedVouchers={purchasedVouchers}
+                  onPurchase={purchaseVoucher}
+                  onBalanceDeducted={refetchVouchers}
+                />
               </TabsContent>
 
               <TabsContent value="history" className="mt-0">
