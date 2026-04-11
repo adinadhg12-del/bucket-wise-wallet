@@ -231,6 +231,15 @@ const Index = () => {
                 )}
               </TabsContent>
 
+              <TabsContent value="vouchers" className="mt-0">
+                <VoucherTab
+                  totalBalance={totalBudget - totalSpent}
+                  purchasedVouchers={purchasedVouchers}
+                  onPurchase={purchaseVoucher}
+                  onBalanceDeducted={refetchVouchers}
+                />
+              </TabsContent>
+
               <TabsContent value="history" className="mt-0">
                 <TransactionList transactions={transactions} />
               </TabsContent>
