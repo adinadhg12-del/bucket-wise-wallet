@@ -18,7 +18,9 @@ import { BudgetSetupModal } from '@/components/BudgetSetupModal';
 import { TransactionList } from '@/components/TransactionList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Wallet, History, Settings2 } from 'lucide-react';
+import { Wallet, History, Settings2, Ticket } from 'lucide-react';
+import { VoucherTab } from '@/components/VoucherTab';
+import { useVouchers } from '@/hooks/useVouchers';
 
 type AppPhase = 'splash' | 'auth' | 'otp' | 'daily-bonus' | 'onboarding' | 'home';
 
