@@ -62,6 +62,39 @@ export type Database = {
         }
         Relationships: []
       }
+      purchased_vouchers: {
+        Row: {
+          brand: string
+          category: string
+          created_at: string
+          id: string
+          status: string
+          user_id: string
+          value: number
+          voucher_code: string
+        }
+        Insert: {
+          brand: string
+          category: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id: string
+          value: number
+          voucher_code?: string
+        }
+        Update: {
+          brand?: string
+          category?: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id?: string
+          value?: number
+          voucher_code?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
