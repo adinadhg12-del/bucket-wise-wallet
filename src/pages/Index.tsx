@@ -55,6 +55,7 @@ const Index = () => {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
   const [editingBucket, setEditingBucket] = useState<Bucket | null>(null);
+  const [isScanPayOpen, setIsScanPayOpen] = useState(false);
 
   // Handle splash completion
   const handleSplashComplete = useCallback(() => {
