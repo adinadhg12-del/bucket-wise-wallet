@@ -18,9 +18,10 @@ import { BudgetSetupModal } from '@/components/BudgetSetupModal';
 import { TransactionList } from '@/components/TransactionList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Wallet, History, Settings2, Ticket } from 'lucide-react';
+import { Wallet, History, Settings2, Ticket, ScanLine } from 'lucide-react';
 import { VoucherTab } from '@/components/VoucherTab';
 import { useVouchers } from '@/hooks/useVouchers';
+import { ScanPayFlow } from '@/components/ScanPayFlow';
 
 type AppPhase = 'splash' | 'auth' | 'otp' | 'daily-bonus' | 'onboarding' | 'home';
 
@@ -54,6 +55,7 @@ const Index = () => {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
   const [editingBucket, setEditingBucket] = useState<Bucket | null>(null);
+  const [isScanPayOpen, setIsScanPayOpen] = useState(false);
 
   // Handle splash completion
   const handleSplashComplete = useCallback(() => {
@@ -259,6 +261,24 @@ const Index = () => {
             isOpen={isBudgetOpen}
             onClose={() => setIsBudgetOpen(false)}
             onSave={updateBudget}
+          />
+
+          {/* Floating Scan & Pay button */}
+          <div className="fixed bottom-6 right-6 z-40">
+            <Button
+              onClick={() => setIsScanPayOpen(true)}
+              className="h-14 w-14 rounded-full shadow-lg p-0"
+            >
+              <ScanLine className="w-6 h-6" />
+            </Button>
+          </div>
+
+          <ScanPayFlow
+            isOpen={isScanPayOpen}
+            onClose={() => setIsScanPayOpen(false)}
+            buckets={buckets}
+            onPaymentComplete={recordPayment}
+            canAfford={canAfford}
           />
         </div>
       );
