@@ -262,6 +262,24 @@ const Index = () => {
             onClose={() => setIsBudgetOpen(false)}
             onSave={updateBudget}
           />
+
+          {/* Floating Scan & Pay button */}
+          <div className="fixed bottom-6 right-6 z-40">
+            <Button
+              onClick={() => setIsScanPayOpen(true)}
+              className="h-14 w-14 rounded-full shadow-lg p-0"
+            >
+              <ScanLine className="w-6 h-6" />
+            </Button>
+          </div>
+
+          <ScanPayFlow
+            isOpen={isScanPayOpen}
+            onClose={() => setIsScanPayOpen(false)}
+            buckets={buckets}
+            onPaymentComplete={recordPayment}
+            canAfford={canAfford}
+          />
         </div>
       );
 
